@@ -6,6 +6,7 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
 use App\Models\Category;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -18,8 +19,14 @@ class ProductController extends Controller
         return view('products.index', compact('categories'));
     }
 
-    public function list(Request $request): View
+    public function list(Request $request): View | RedirectResponse
     {
+
+        // If hit directly in the browser, redirect to full page with styles
+        if (!$request->ajax()) {
+            return redirect('/products');
+        }
+
         $query = Product::with('category');
 
         // Apply filters
