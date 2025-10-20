@@ -13,6 +13,8 @@ const AppState = {
     paginationType: 'numbered',
     isEditing: false,
     editingProductId: null,
+
+    categoriesPage: 1,
     
     // Load state from localStorage
     loadFromStorage() {
@@ -22,6 +24,7 @@ const AppState = {
             this.filters = { ...this.filters, ...state.filters };
             this.currentPage = state.currentPage || 1;
             this.paginationType = state.paginationType || 'numbered';
+            this.categoriesPage = state.categoriesPage || 1;
         }
     },
     
@@ -30,7 +33,8 @@ const AppState = {
         const state = {
             filters: this.filters,
             currentPage: this.currentPage,
-            paginationType: this.paginationType
+            paginationType: this.paginationType,
+            categoriesPage: this.categoriesPage
         };
         localStorage.setItem('productManagementState', JSON.stringify(state));
     },
@@ -143,9 +147,13 @@ const API = {
     },
     
     // Fetch categories
-    async fetchCategories() {
+    async fetchCategories(params = {}) {
         try {
-            const response = await fetch('/categories/list');
+            const page = params.page ?? AppState.categoriesPage ?? 1;
+            const query = new URLSearchParams({ page });
+            const response = await fetch(`/categories/list?${query}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
             if (!response.ok) throw new Error('Failed to fetch categories');
             return await response.text();
         } catch (error) {
@@ -468,11 +476,45 @@ const UI = {
     async fetchAndRenderCategories() {
         const container = document.getElementById('categories-container');
         container.innerHTML = '<div class="text-center py-8">Loading...</div>';
-        
-        const html = await API.fetchCategories();
+
+        // Reset to first page for categories
+        AppState.categoriesPage = 1;
+        AppState.saveToStorage();
+
+        const html = await API.fetchCategories({ page: 1 });
         container.innerHTML = html;
-        
+
         // Re-attach event listeners
+        this.attachCategoryEventListeners();
+    },
+
+    //Load next page of categories and append
+    async loadMoreCategories(nextPage) {
+        const container = document.getElementById('categories-container');
+        const grid = container.querySelector('#categories-grid');
+        if (!grid) return;
+
+        const html = await API.fetchCategories({ page: nextPage });
+        if (!html) return;
+
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+
+        const newGrid = temp.querySelector('#categories-grid');
+        if (newGrid) {
+            Array.from(newGrid.children).forEach(node => grid.appendChild(node));
+        }
+
+        // Replace "Load More" container
+        const oldMore = container.querySelector('#categories-load-more-container');
+        const newMore = temp.querySelector('#categories-load-more-container');
+        if (oldMore) oldMore.remove();
+        if (newMore) container.appendChild(newMore);
+
+        AppState.categoriesPage = nextPage;
+        AppState.saveToStorage();
+
+        // Re-attach handlers for newly added cards and possibly new button
         this.attachCategoryEventListeners();
     },
     
@@ -621,6 +663,19 @@ const UI = {
                 this.showDeleteConfirmation('category', { id: categoryId, name: categoryName });
             });
         });
+
+        const loadMoreBtn = document.getElementById('categories-load-more');
+        if (loadMoreBtn) {
+            // Remove any previous listener by cloning
+            const clone = loadMoreBtn.cloneNode(true);
+            loadMoreBtn.parentNode.replaceChild(clone, loadMoreBtn);
+            clone.addEventListener('click', (e) => {
+                e.preventDefault();
+                const nextPage = parseInt(clone.dataset.nextPage, 10) || (AppState.categoriesPage + 1);
+                this.loadMoreCategories(nextPage);
+            });
+        }
+
     },
     
     // Show edit product modal
@@ -909,24 +964,6 @@ const EventHandlers = {
         if (createCategoryBtn) {
             createCategoryBtn.addEventListener('click', () => {
                 UI.showModal('category');
-            });
-        }
-        
-        // Pagination toggle button
-        const paginationToggle = document.getElementById('pagination-toggle');
-        if (paginationToggle) {
-            paginationToggle.addEventListener('click', () => {
-                AppState.paginationType = AppState.paginationType === 'numbered' ? 'loadmore' : 'numbered';
-                AppState.saveToStorage();
-                
-                // Update button text
-                const paginationText = document.getElementById('pagination-text');
-                if (paginationText) {
-                    paginationText.textContent = AppState.paginationType === 'numbered' ? 'Numbered' : 'Load More';
-                }
-                
-                // Refresh the current view
-                UI.fetchAndRenderProducts();
             });
         }
     },

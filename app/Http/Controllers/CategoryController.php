@@ -6,13 +6,24 @@ use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CategoryController extends Controller
 {
-    public function list(): View
+    public function list(Request $request): View|RedirectResponse
     {
-        $categories = Category::withCount('products')->orderBy('name')->get();
+        if (! $request->ajax()) {
+            // Ensure full layout/styles if opened directly
+            return redirect('/products#categories');
+        }
+
+        $categories = Category::withCount('products')
+            ->orderBy('name')
+            ->paginate(10)
+            ->withQueryString();
+
         return view('products.partials.category-list', compact('categories'));
     }
 
@@ -23,14 +34,14 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category created successfully.',
-            'category' => $category
+            'category' => $category,
         ], 201);
     }
 
     public function edit(Category $category): JsonResponse
     {
         return response()->json([
-            'category' => $category
+            'category' => $category,
         ]);
     }
 
@@ -41,7 +52,7 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category updated successfully.',
-            'category' => $category
+            'category' => $category,
         ]);
     }
 
@@ -50,7 +61,7 @@ class CategoryController extends Controller
         if ($category->products()->count() > 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot delete category with existing products.'
+                'message' => 'Cannot delete category with existing products.',
             ], 422);
         }
 
@@ -58,7 +69,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Category deleted successfully.'
+            'message' => 'Category deleted successfully.',
         ]);
     }
 }
