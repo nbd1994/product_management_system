@@ -66,10 +66,6 @@ This project is a CRUD web app for managing Products and Categories. It demonstr
   - Main page: resources/views/products/index.blade.php
   - Partials for list and card components
 
-## Screenshots
-- Place screenshots under docs/
-  - docs/screenshot-home.png (shown above)
-- To capture: open /products in your browser and take a screenshot.
 
 ## Getting Started
 
@@ -97,18 +93,6 @@ The repository includes a Dockerfile that builds vendor dependencies, builds fro
   - Start the container:
     - docker run --rm -p 8080:8080 -e PORT=8080 --name pms pms:latest
   - Open http://localhost:8080/products
-
-- Run with PostgreSQL
-  - Create a network and DB container:
-    - docker network create pms-net
-    - docker run -d --name pms-db --network pms-net -e POSTGRES_DB=pms -e POSTGRES_USER=pms -e POSTGRES_PASSWORD=secret postgres:15
-  - Start the app:
-    - docker run --rm --network pms-net -p 8080:8080 -e PORT=8080 -e DB_CONNECTION=pgsql -e DB_HOST=pms-db -e DB_PORT=5432 -e DB_DATABASE=pms -e DB_USERNAME=pms -e DB_PASSWORD=secret --name pms pms:latest
-  - Open http://localhost:8080/products
-
-Notes
-- The entrypoint generates APP_KEY (if needed), caches config/routes, and runs migrations automatically.
-- For persistent uploads, use S3 or equivalent (container storage is ephemeral).
 
 ### Option B: Run locally (PHP/Composer/Node)
 - Install dependencies
@@ -181,7 +165,6 @@ This repo ships a Dockerfile that works on Render.
   - APP_DEBUG=false
   - APP_URL=https://pms-3cvz.onrender.com
 - The container listens on $PORT via an entrypoint hook:
-  - .docker/99-laravel.sh sets LISTEN_PORT from PORT and runs caches/migrations
 
 Persistent storage
 - Container filesystem is ephemeral. Use a cloud storage (S3) for user uploads.
