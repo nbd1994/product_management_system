@@ -17,7 +17,7 @@ COPY tailwind.config.js* postcss.config.js* ./
 RUN npm run build
 
 # 3) Final runtime (non-root PHP + Nginx)
-FROM trafex/php-nginx:latest
+FROM trafex/php-nginx:3.3.0
 
 # Become root for file ops during build
 USER root

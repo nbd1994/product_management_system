@@ -272,76 +272,82 @@ const UI = {
     },
     
     // Setup product form
-    setupProductForm(product = null) {
+ setupProductForm(product = null) {
         const form = document.getElementById('product-form');
-        if (product) {
-            document.getElementById('product-id').value = product.id;
-            document.getElementById('product-name').value = product.name;
-            document.getElementById('product-price').value = product.price;
-            document.getElementById('product-description').value = product.description || '';
-            document.getElementById('product-category').value = product.category_id;
-            document.getElementById('product-stock').value = product.stock;
-            document.getElementById('product-status').value = product.status;
-        } else {
-            form.reset();
-        }
-        
-        // Remove existing event listeners
+        // Remove existing event listeners first (cloning can reset dynamic values)
         const newForm = form.cloneNode(true);
         form.parentNode.replaceChild(newForm, form);
-        
+
+        if (product) {
+            newForm.querySelector('#product-id').value = product.id;
+            newForm.querySelector('#product-name').value = product.name;
+            newForm.querySelector('#product-price').value = product.price;
+            newForm.querySelector('#product-description').value = product.description || '';
+            newForm.querySelector('#product-stock').value = product.stock;
+            newForm.querySelector('#product-status').value = product.status;
+
+           // Ensure category select preselects previous value
+            const categorySelect = newForm.querySelector('#product-category');
+            if (categorySelect) {
+                const target = String(product.category_id ?? '');
+                categorySelect.value = target;
+            }
+        } else {
+            newForm.reset();
+        }
+
         // Add form submission handler
         newForm.addEventListener('submit', this.handleProductFormSubmit.bind(this));
-        
-        // Setup modal footer buttons
-        const confirmBtn = document.getElementById('modal-confirm');
-        const cancelBtn = document.getElementById('modal-cancel');
-        
-        // Remove existing event listeners
-        const newConfirmBtn = confirmBtn.cloneNode(true);
-        const newCancelBtn = cancelBtn.cloneNode(true);
-        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-        
-        newConfirmBtn.addEventListener('click', () => {
-            newForm.requestSubmit();
-        });
-        newCancelBtn.addEventListener('click', this.hideModal);
-    },
+         
+         // Setup modal footer buttons
+         const confirmBtn = document.getElementById('modal-confirm');
+         const cancelBtn = document.getElementById('modal-cancel');
+         
+         // Remove existing event listeners
+         const newConfirmBtn = confirmBtn.cloneNode(true);
+         const newCancelBtn = cancelBtn.cloneNode(true);
+         confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+         cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+         
+         newConfirmBtn.addEventListener('click', () => {
+             newForm.requestSubmit();
+         });
+         newCancelBtn.addEventListener('click', this.hideModal);
+     },
     
     // Setup category form
     setupCategoryForm(category = null) {
         const form = document.getElementById('category-form');
-        if (category) {
-            document.getElementById('category-id').value = category.id;
-            document.getElementById('category-name').value = category.name;
-            document.getElementById('category-description').value = category.description || '';
-        } else {
-            form.reset();
-        }
-        
-        // Remove existing event listeners
+        // Remove listeners first
         const newForm = form.cloneNode(true);
         form.parentNode.replaceChild(newForm, form);
-        
-        // Add form submission handler
-        newForm.addEventListener('submit', this.handleCategoryFormSubmit.bind(this));
-        
-        // Setup modal footer buttons
-        const confirmBtn = document.getElementById('modal-confirm');
-        const cancelBtn = document.getElementById('modal-cancel');
-        
-        // Remove existing event listeners
-        const newConfirmBtn = confirmBtn.cloneNode(true);
-        const newCancelBtn = cancelBtn.cloneNode(true);
-        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-        
-        newConfirmBtn.addEventListener('click', () => {
-            newForm.requestSubmit();
-        });
-        newCancelBtn.addEventListener('click', this.hideModal);
-    },
+
+        if (category) {
+            newForm.querySelector('#category-id').value = category.id;
+            newForm.querySelector('#category-name').value = category.name;
+            newForm.querySelector('#category-description').value = category.description || '';
+        } else {
+            newForm.reset();
+        }
+         
+         // Add form submission handler
+         newForm.addEventListener('submit', this.handleCategoryFormSubmit.bind(this));
+         
+         // Setup modal footer buttons
+         const confirmBtn = document.getElementById('modal-confirm');
+         const cancelBtn = document.getElementById('modal-cancel');
+         
+         // Remove existing event listeners
+         const newConfirmBtn = confirmBtn.cloneNode(true);
+         const newCancelBtn = cancelBtn.cloneNode(true);
+         confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+         cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+         
+         newConfirmBtn.addEventListener('click', () => {
+             newForm.requestSubmit();
+         });
+         newCancelBtn.addEventListener('click', this.hideModal);
+     },
     
     // Setup delete confirmation
     setupDeleteConfirmation(item) {
@@ -465,6 +471,7 @@ const UI = {
             const html = await API.fetchProducts();
             container.innerHTML = html;
             
+            // Re-attach event listeners
             this.attachProductEventListeners();
         }
     },
