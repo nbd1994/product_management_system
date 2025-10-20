@@ -2,7 +2,7 @@
 
 A simple, fast Product and Category management system built with Laravel and Vanilla JavaScript. It supports AJAX-powered CRUD, filtering, search, sorting, pagination (numbered and “load more”), inline editing, modals, and toast notifications.
 
-![Home Screen](docs/screenshot-home.png)
+![Home Screen](./docs/screenshot-home.png)
 
 Table of Contents
 - Overview
