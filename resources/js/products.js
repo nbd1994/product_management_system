@@ -104,7 +104,6 @@ const API = {
     // Update product
     async updateProduct(id, data) {
         try {
-            // Add _method field for Laravel to recognize PUT request
             data._method = 'PUT';
             
             const response = await fetch(`/products/${id}`, {
@@ -188,7 +187,6 @@ const API = {
     // Update category
     async updateCategory(id, data) {
         try {
-            // Add _method field for Laravel to recognize PUT request
             data._method = 'PUT';
             
             const response = await fetch(`/categories/${id}`, {
@@ -467,7 +465,6 @@ const UI = {
             const html = await API.fetchProducts();
             container.innerHTML = html;
             
-            // Re-attach event listeners
             this.attachProductEventListeners();
         }
     },

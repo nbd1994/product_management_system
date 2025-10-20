@@ -1,61 +1,227 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Product Management System (Laravel + Vanilla JS)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A simple, fast Product and Category management system built with Laravel and Vanilla JavaScript. It supports AJAX-powered CRUD, filtering, search, sorting, pagination (numbered and “load more”), inline editing, modals, and toast notifications.
 
-## About Laravel
+![Home Screen](docs/screenshot-home.png)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Table of Contents
+- Overview
+- Features
+- Tech Stack
+- Architecture
+- Screenshots
+- Getting Started
+  - Option A: Run with Docker (recommended)
+  - Option B: Run locally (PHP/Composer/Node)
+- Environment Variables
+- Database Schema
+- Routes
+- Frontend (Vite)
+- Testing
+- Deployment (Render)
+- Troubleshooting
+- Project Structure
+- License
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Overview
+This project is a CRUD web app for managing Products and Categories. It demonstrates a clean Laravel backend and a structured Vanilla JS frontend, providing a responsive UI and modern UX patterns without heavy frameworks.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Features
+- Products
+  - Create, read, update, delete
+  - Inline editing for name, price, stock
+  - Client + server validation
+- Categories
+  - Full CRUD
+  - Validate usage before delete
+- Filters, Search, Sort
+  - Combined filter+search+sort, debounced
+  - Stateful with localStorage
+- Pagination
+  - Numbered pagination and “Load More” mode
+- Modals & Toasts
+  - Accessible modals (focus trap, Esc/Enter)
+  - Auto-dismissing toasts
+- Accessibility
+  - ARIA labels, keyboard navigation, focus styles
+- Architecture
+  - Blade views + JS modules
+  - Laravel Form Requests, Controllers, AJAX endpoints
 
-## Learning Laravel
+## Tech Stack
+- Backend: Laravel 12 (PHP 8.3)
+- Frontend: Vanilla JS, Vite, Tailwind
+- DB: SQLite
+- Container: Multi-stage Docker (Composer, Node, PHP+Nginx)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Architecture
+- Backend
+  - Controllers: ProductController, CategoryController
+  - Requests: Store/Update Product & Category
+  - Routes: Web routes return Blade/partials + JSON for AJAX
+- Frontend
+  - resources/js/products.js: AppState, API module, UI module, EventHandlers
+  - AJAX calls hit /products/list and CRUD endpoints
+- Views
+  - Main page: resources/views/products/index.blade.php
+  - Partials for list and card components
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Screenshots
+- Place screenshots under docs/
+  - docs/screenshot-home.png (shown above)
+- To capture: open /products in your browser and take a screenshot.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Getting Started
 
-## Laravel Sponsors
+### Prerequisites
+- Option A (Docker): Docker Desktop installed
+- Option B (Local): PHP 8.3+, Composer, Node 20+, npm
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Option A: Run with Docker (recommended)
+The repository includes a Dockerfile that builds vendor dependencies, builds frontend assets, and runs PHP+Nginx. An entrypoint script warms caches and runs migrations.
 
-### Premium Partners
+- Build the image
+  - PowerShell (Windows):
+    - cd "c:\Users\Natnael Desalegn\Herd\product_management_system"
+    - docker build -t pms:latest .
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- Run with SQLite (no external DB)
+  - Prepare .env and SQLite file:
+    - copy .env.example .env
+    - ni .\database\database.sqlite -ItemType File
+    - Edit .env:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=sqlite
+      - Comment out DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
+  - Start the container:
+    - docker run --rm -p 8080:8080 -e PORT=8080 --name pms pms:latest
+  - Open http://localhost:8080/products
 
-## Contributing
+- Run with PostgreSQL
+  - Create a network and DB container:
+    - docker network create pms-net
+    - docker run -d --name pms-db --network pms-net -e POSTGRES_DB=pms -e POSTGRES_USER=pms -e POSTGRES_PASSWORD=secret postgres:15
+  - Start the app:
+    - docker run --rm --network pms-net -p 8080:8080 -e PORT=8080 -e DB_CONNECTION=pgsql -e DB_HOST=pms-db -e DB_PORT=5432 -e DB_DATABASE=pms -e DB_USERNAME=pms -e DB_PASSWORD=secret --name pms pms:latest
+  - Open http://localhost:8080/products
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Notes
+- The entrypoint generates APP_KEY (if needed), caches config/routes, and runs migrations automatically.
+- For persistent uploads, use S3 or equivalent (container storage is ephemeral).
 
-## Code of Conduct
+### Option B: Run locally (PHP/Composer/Node)
+- Install dependencies
+  - composer install
+  - npm install
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- Environment
+  - copy .env.example .env
+  - php artisan key:generate
+  - Configure DB in .env (SQLite recommended for quick start)
+    - For SQLite: DB_CONNECTION=sqlite and create database/database.sqlite
 
-## Security Vulnerabilities
+- Database
+  - php artisan migrate --seed
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Build frontend
+  - npm run dev   (hot dev server)
+  - or npm run build (production)
 
-## License
+- Serve
+  - php artisan serve
+  - Open http://127.0.0.1:8000/products
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Database Schema
+- categories
+  - id, name, description (nullable), timestamps
+- products
+  - id, name, price (decimal 10,2), description (text), category_id (FK), stock (int), status (Active/Inactive), timestamps
+
+Models
+- Category hasMany Product
+- Product belongsTo Category; status cast to enum/string
+
+## Routes
+- GET /products — Main page
+- GET /products/list — Returns product list partial (AJAX)
+- POST /products — Create product
+- GET /products/{id}/edit — Get product data (JSON)
+- PUT /products/{id} — Update product
+- DELETE /products/{id} — Delete product
+- Categories: GET/POST/PUT/DELETE /categories
+
+## Frontend (Vite)
+- Dev: npm run dev
+- Build: npm run build
+- Assets output: public/build
+
+Key file
+- resources/js/products.js
+  - AppState with localStorage persistence
+  - API module (fetch/create/update/delete for products/categories)
+  - UI module (rendering, modals, toasts, inline edit)
+  - EventHandlers (filters, search, sort, pagination, forms)
+
+## Testing
+- Feature tests (Pest):
+  - php artisan test
+- If you use browser/E2E tests, configure them per your setup.
+- Run Pint (if configured):
+  - ./vendor/bin/pint
+
+## Deployment (Render)
+This repo ships a Dockerfile that works on Render.
+
+- Create a Web Service (Docker)
+- Use repo root as the context
+- No build/start command needed (Dockerfile handles it)
+- Set environment variables:
+  - APP_ENV=production
+  - APP_DEBUG=false
+  - APP_URL=https://pms-3cvz.onrender.com
+- The container listens on $PORT via an entrypoint hook:
+  - .docker/99-laravel.sh sets LISTEN_PORT from PORT and runs caches/migrations
+
+Persistent storage
+- Container filesystem is ephemeral. Use a cloud storage (S3) for user uploads.
+
+## Troubleshooting
+- 404 or blank page
+  - Ensure APP_URL matches your access URL
+  - Check that public/build exists (npm run build) in production
+- 500 errors
+  - Ensure APP_KEY is set
+  - Run migrations: php artisan migrate --force
+- Port issues locally
+  - Change the published port: docker run -p 8081:8080 -e PORT=8080 ...
+- Permission errors (storage/bootstrap/cache)
+  - Ensure writable by the app user (Dockerfile sets this)
+- Composer “artisan not found” during build
+  - Vendor stage uses --no-scripts and runs dump-autoload after code copy (already handled)
+
+## Project Structure
+```
+app/
+  Http/
+    Controllers/
+    Requests/
+  Models/
+database/
+  migrations/
+  factories/
+  seeders/
+resources/
+  views/
+    products/
+      index.blade.php
+      partials/
+        list.blade.php
+        card.blade.php
+  js/
+    products.js
+public/
+  build/
+tests/
+Dockerfile
+```
